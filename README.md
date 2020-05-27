@@ -56,10 +56,7 @@ targeted-offers-client sdk will support Java Version 8 or higher.
 
 SDK needs to be configured with OAuth, Mutual Auth and Payload encryption configurations, below is the sample configuration snippet.
 
-```java
 
-
-```
 
 <br/>
 
@@ -69,8 +66,7 @@ Amex Targeted Offers API uses token based authentication. The following examples
 
 ```java
 AccessTokenResponse accessTokenResponse = getAuthenticationToken(targetedOffersClient); //success response
-
-				targetedOffersClient.setAccessToken(accessTokenResponse.getAccessToken()); //set the Access Token for further API calls 
+targetedOffersClient.setAccessToken(accessTokenResponse.getAccessToken()); //set the Access Token for further API calls 
 })
 
 ```
@@ -139,7 +135,7 @@ The `getSessionToken()` method is used to get a session token. Session Token is 
  //applicant_request_tracking_id will be provided as part of the targeted offers response. please pass the value to get session token.
  
 TokenRequest tokenRequest = objectMapper.readValue(
-	Thread.currentThread().getContextClassLoader().getResourceAsStream("sessionTokenRequest.json"), TokenRequest.class);
+Thread.currentThread().getContextClassLoader().getResourceAsStream("sessionTokenRequest.json"), TokenRequest.class);
 
 TokenResponse tokenResponse = tokenService.getSessionToken(tokenRequest);
 				
@@ -206,19 +202,19 @@ Instructions for Running Samples are in the [sample directory](/samples).
 Use the following variables from "sample.properties" resource file as the constants entries in the TargetedOffersSample to run the SDK (example values below) :
 
 ```java
-developer.portal.sdk=jks_file_example.jks			// SDK keystore
-keystore.jks=jks									// Java keystore format type
+developer.portal.sdk=jks_file_example.jks		// SDK keystore
+keystore.jks=jks					// Java keystore format type
 oauth.keystore.trust.stream=trust_file_example.jks	// Path to trust store file
 oauth.keystore.load.trust.stream=trust_user_example	// Keystore username
 oauth.keystore.passphrase.property=password_example	// Keystore password
-oauth.keystore.alias.property=alias_example			// Alias (or name) under which the key is stored in the keystore
+oauth.keystore.alias.property=alias_example		// Alias (or name) under which the key is stored in the keystore
 oauth.offers.api.endpoint=https://example.aexp.com	// TargetedOffersAPI SDK endpoint
-oauth.api.key=auth_key_example						// OAuth Client ID/Key
-oauth.api.secret=auth_key_secret_example			// OAuth Secret 
-proxy.protocol=http								// Protocol Client uses to connect to proxy/load balancer
-proxy.enabled=true								// Enabled or disabled proxy
-proxy.host=proxy.example.com						// Proxy host
-proxy.port=8080									// Proxy port
+oauth.api.key=auth_key_example				// OAuth Client ID/Key
+oauth.api.secret=auth_key_secret_example		// OAuth Secret 
+proxy.protocol=http					// Protocol Client uses to connect to proxy/load balancer
+proxy.enabled=true					// Enabled or disabled proxy
+proxy.host=proxy.example.com				// Proxy host
+proxy.port=8080						// Proxy port
 ```
 
 <br/>
