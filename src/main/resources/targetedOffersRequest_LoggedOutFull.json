@@ -1,0 +1,27 @@
+{
+  "partner": {
+    "partner_name": "ABC PARTNER"
+  },
+  "transaction_cost": {
+    "currency": "USD",
+    "amount": "3000"
+  },
+  "personalization": {
+    "page_id": "trip-summary-rev"
+  },
+  "application_context": {
+    "channel": "WEB",
+    "session_id": "Ae8icl3AwieSsdjSDe8383",
+    "language_code": "EN",
+    "referring_url": "https://www.example.com/",
+    "user_session_status": "WARM_COOKIED"
+  },
+  "device_info": {
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36",
+    "geo_zipcode":"10285",
+    "ip_address": "12.199.98.XXX",
+    "screen_resolution": "718X412",
+    "browser_area_size": "412X846",
+    "private_browsing_indicator": "N"
+  }
+}

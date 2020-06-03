@@ -61,7 +61,7 @@ import com.nimbusds.jose.Payload;
 import com.nimbusds.jose.crypto.RSAEncrypter;
 
 /**
- * 
+ *
  * The Offers Service Implementation class handles all the API operations
  * required for Targeted Offers feature
  *
@@ -79,11 +79,11 @@ public class OffersServiceImpl implements OffersService {
 
 	/**
 	 * Get AccessToken and the list of API Products approved for the token
-	 * 
+	 *
 	 * @return {@link OffersResponse}
 	 * @throws OffersException
 	 */
-	public OffersResponse getOffers(com.americanexpress.sdk.models.targeted_offers.TargetedOffersRequest targetedOffersRequest, RequestHeader requestHeader) throws OffersException {
+	public OffersResponse getOffers(TargetedOffersRequest targetedOffersRequest, RequestHeader requestHeader) throws OffersException {
 
 		MultivaluedMap<String, Object> headers = OfferUtil.buildHeaders(requestHeader,
 				config);
@@ -92,7 +92,7 @@ public class OffersServiceImpl implements OffersService {
 		}
 		OffersResponse offersResponse = null;
 		try {
-			com.americanexpress.sdk.models.targeted_offers.TargetedOffersRequest request = new TargetedOffersRequest();
+			TargetedOffersRequest request = new TargetedOffersRequest();
 			if (null != config.getJweConfig() && null != config.getJweConfig().getPublicKey()) {
 				String encryptedPayload = encrypt(targetedOffersRequest, config.getJweConfig().getPublicKey());
 				request.getEncryptedRequest().setUserInfo(encryptedPayload);
@@ -119,7 +119,7 @@ public class OffersServiceImpl implements OffersService {
 
 	/**
 	 * Acknowledging offers were received.
-	 * 
+	 *
 	 * @param acknowledgementRequest
 	 * @return Boolean
 	 */
@@ -139,7 +139,7 @@ public class OffersServiceImpl implements OffersService {
 
 	/**
 	 * JWE encryption
-	 * 
+	 *
 	 * @param targetedOffersRequest
 	 * @param publicKey
 	 * @return String

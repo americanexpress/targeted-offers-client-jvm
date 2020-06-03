@@ -12,10 +12,10 @@ Targeted Offers API provides an interface to interact with systems of American E
 - [Compatibility](#compatibility)
 - [Configuration](#configuring-sdk)
 - [Authentication](#authentication)
-    - [Offers](#offers)
-        - [Getting offers](#getting-offers)
-        - [Acknowledging Offers](#acknowledging-offers)
-    - [Token](#token)
+- [Offers](#offers)
+    - [Getting offers](#getting-offers)
+    - [Acknowledging Offers](#acknowledging-offers)
+- [Token](#token)
 - [Error Handling](#error-handling)
 - [Samples](#running-samples)
 - [Open Source Contribution](#contributing)
@@ -56,7 +56,41 @@ targeted-offers-client sdk will support Java Version 8 or higher.
 
 SDK needs to be configured with OAuth, Mutual Auth and Payload encryption configurations, below is the sample configuration snippet.
 
+```java
+private TargetedOffersClient createTargetedOffersClient() throws IOException, CertificateException,
+        NoSuchAlgorithmException, KeyStoreException, UnrecoverableKeyException, KeyManagementException {
+    Map<String, String> sampleConfig = buildClientConfig();
+    TargetedOffersClient targetedOffersClient = null;
 
+    InputStream inputStream = Thread.currentThread().getContextClassLoader()
+            .getResourceAsStream(sampleConfig.get(DEVELOPER_PORTAL_SDK));
+    KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
+    ks.load(inputStream, sampleConfig.get(OAUTH_KEYSTORE_PASSPHRASE_PROPERTY).toCharArray());
+    KeyStore trustStore = KeyStore.getInstance(sampleConfig.get(KEYSTORE_JKS));
+    InputStream trustStream = Thread.currentThread().getContextClassLoader()
+            .getResourceAsStream(sampleConfig.get(OAUTH_KEYSTORE_TRUST_STREAM));
+    trustStore.load(trustStream, sampleConfig.get(OAUTH_KEYSTORE_LOAD_TRUST_STREAM).toCharArray());
+
+    SSLConnectionSocketFactory socketFactory = new SSLConnectionSocketFactory(
+            new SSLContextBuilder().loadTrustMaterial(trustStore, (chain, authType) -> false)
+                    .loadKeyMaterial(ks, sampleConfig.get(OAUTH_KEYSTORE_PASSPHRASE_PROPERTY).toCharArray(),
+                            (aliases, socket) -> sampleConfig.get(OAUTH_KEYSTORE_ALIAS_PROPERTY))
+                    .build());
+
+    targetedOffersClient = TargetedOffersClient.Builder
+            .build(Config.builder().url(sampleConfig.get(OAUTH_OFFERS_API_ENDPOINT))
+            .apiKey(sampleConfig.get(OAUTH_API_KEY))
+            .apiSecret(sampleConfig.get(OAUTH_API_SECRET))
+            .accessToken(null)
+            .socketFactory(socketFactory)
+            .jweConfig(new JWEConfig(false))
+            .proxyConfig(new ProxyConfig(Boolean.parseBoolean(sampleConfig.get(PROXY_ENABLED)),
+                    sampleConfig.get(PROXY_PROTOCOL), sampleConfig.get(PROXY_HOST),
+                    Integer.valueOf(sampleConfig.get(PROXY_PORT)))).build());
+
+    return targetedOffersClient;
+}
+```
 
 <br/>
 
@@ -66,9 +100,8 @@ Amex Targeted Offers API uses token based authentication. The following examples
 
 ```java
 AccessTokenResponse accessTokenResponse = getAuthenticationToken(targetedOffersClient); //success response
-targetedOffersClient.setAccessToken(accessTokenResponse.getAccessToken()); //set the Access Token for further API calls 
-})
 
+targetedOffersClient.setAccessToken(accessTokenResponse.getAccessToken()); //set the Access Token for further API calls 
 ```
 Sample Response : 
 
@@ -80,7 +113,6 @@ Sample Response :
   token_type: 'BearerToken',
   access_token: 'wJeW9CPT0DbrqBjrTN1xbMQZkae2'
 }
-
 ```
 Note : you can skip this call if you have an active Token in your cache. if you have an active token, you can just set the bearerToken in config under authentication or call `setAccessToken('access_token')` method to update the config.
 
@@ -105,8 +137,6 @@ offersResponse = offersService.getOffers(targetedOffersRequest);
 //see src/main/resources for a sample header and body
 
 return offersResponse; //successful response
-});
-
 ```
 
 This will return an array of offers, you can find more information on response at [reference guide](https://developer.americanexpress.com/products/targeted-offers/resources#readme).
@@ -121,8 +151,6 @@ The `acknowledgeOffers()` method is used to let American Express know that offer
 acknowledgementRequest.setApplicantRequestTrackingId(offersResponse.getApplicantRequestTrackingId());
 				
 return offersService.acknowledgeOffers(acknowledgementRequest); //successful response
-});
-
 ```
 
 
@@ -132,22 +160,20 @@ return offersService.acknowledgeOffers(acknowledgementRequest); //successful res
 The `getSessionToken()` method is used to get a session token. Session Token is required to maintain the session of the user and is only of one time use.
 
 ```java
- //applicant_request_tracking_id will be provided as part of the targeted offers response. please pass the value to get session token.
+//applicant_request_tracking_id will be provided as part of the targeted offers response. please pass the value to get session token.
  
 TokenRequest tokenRequest = objectMapper.readValue(
-Thread.currentThread().getContextClassLoader().getResourceAsStream("sessionTokenRequest.json"), TokenRequest.class);
+	Thread.currentThread().getContextClassLoader().getResourceAsStream("sessionTokenRequest.json"), TokenRequest.class);
 
 TokenResponse tokenResponse = tokenService.getSessionToken(tokenRequest);
 				
 return objectMapper.writeValueAsString(tokenResponse)); //successful response
-
 ```
 Sample Success response: 
 
 ```java
 {
   SessionToken: eyJhbGciOiJSUzI1NiJ9.eyJjbGFpbXNfcmVxIjoidHJ1ZSIsImFjY2Vzc190eXBlIjoiUyIsInRva2VuX2lkIjoiYXBwbGljYW50X3JlcXVlc3RfdHJhY2tpbmdfaWQiLCJyZXNvdXJjZV9pZCI6IjUyMjRhNjMzLTczNDQtNGZjZi1hOGVkLWU2MzE0NmM2ZmVhOCIsInRva2VuX3R5cGUiOiJTIiwiZXhwIjoxNTgyODY3MTQzLCJqdGkiOiI1YzUyYmNlYi1mNmExLTQ0YTEtOTk4ZS0yYTBjNmFmMDhiYmQiLCJjbGllbnRfaWQiOiJDbGllbnRfSUQifQ.NnmzkiiB08YWZQKWKFvAwAHdcNoqjmkSBc4vNwr0TXu1SBWgEhC4J_3mbunQ_PV8FUq6-n4YI4ogPSTuy570AZJ4sq9e86gE-dIuuOMs2AzsLukeIz5PHuHUP9friqpcKHbOqJFMohBNwsA0IGwA96aB9BJ0yPDqcGgiOtju_QekGJRk6LByHUQevuPsHdZjGCgXpXiqHjOFA3SFycE0NUi2pLnC5VISgG-OFFr0HaoqskcM843UMyGb_MGDKcgMJUhDuHaqqsI4oJ-SmGYs6r88vIlxLvPX-JWuSjI8uLITOYvCq8CQPoKEasLhhu93I_YlZO4B423oJ_OQoIvePw
-
 }
 ```
 
@@ -155,30 +181,8 @@ Sample Success response:
 
 ## Error Handling
 
-In case of exceptions encountered while calling American Express APIs, SDK will throw Errors. For example if all the required fields are not sent, SDK will throw an error object with name `OffersRequestValidationError`. 
+In case of exceptions encountered while calling American Express APIs, the SDK will throw Errors. 
 
-if callback function is provided, error will be sent back as the first argument of the callback function.
-
-```java
-} catch (OffersException ex) {
-	throw ex; // handle exception
-} catch (Exception ex) {
-     throw new ... // handle exception
-	}
-}
-```
-if callback function is not provided, SDK will reject Promise
-
-```java
-tokenResponse = tokenService.getSessionToken(tokenRequest);
-
-} catch (OffersException ex) {
-	throw ex;
-} catch (Exception ex) {
-	throw new OffersException(INTERNAL_SDK_EXCEPTION, ex);
-}
-return tokenResponse; // success
-```
 
 Possible exceptions : 
 ```java
@@ -198,23 +202,34 @@ Possible exceptions :
 <br/>
 
 ## Running Samples 
-Instructions for Running Samples are in the [sample directory](/samples).
-Use the following variables from "sample.properties" resource file as the constants entries in the TargetedOffersSample to run the SDK (example values below) :
+See TargetedOffersSample.java for sample usages of Targeted Offers SDK.
+There are four different samples included to demonstrate the different 
+scenarios in which Targeted Offers API can be used:
+- Logged In (only PII available)
+- Logged In (PII and session data available)
+- Logged Out Warm (Partner account number and session data available)
+- Logged Out Full (only session data available)
+
+Each sample includes an example request JSON. Please update the example values
+with actual values before running the sample.
+
+The "sample.properties" resource file contains the variables needed to run the sample.
+Please replace the example values with actual values before running the sample.
 
 ```java
-developer.portal.sdk=jks_file_example.jks		// SDK keystore
-keystore.jks=jks					// Java keystore format type
-oauth.keystore.trust.stream=trust_file_example.jks	// Path to trust store file
-oauth.keystore.load.trust.stream=trust_user_example	// Keystore username
-oauth.keystore.passphrase.property=password_example	// Keystore password
-oauth.keystore.alias.property=alias_example		// Alias (or name) under which the key is stored in the keystore
-oauth.offers.api.endpoint=https://example.aexp.com	// TargetedOffersAPI SDK endpoint
-oauth.api.key=auth_key_example				// OAuth Client ID/Key
-oauth.api.secret=auth_key_secret_example		// OAuth Secret 
-proxy.protocol=http					// Protocol Client uses to connect to proxy/load balancer
-proxy.enabled=true					// Enabled or disabled proxy
-proxy.host=proxy.example.com				// Proxy host
-proxy.port=8080						// Proxy port
+developer.portal.sdk=jks_file_example.jks           // SDK keystore
+keystore.jks=jks                                    // Java keystore format type
+oauth.keystore.trust.stream=trust_file_example.jks  // Path to trust store file
+oauth.keystore.load.trust.stream=trust_user_example // Keystore username
+oauth.keystore.passphrase.property=password_example // Keystore password
+oauth.keystore.alias.property=alias_example         // Alias (or name) under which the key is stored in the keystore
+oauth.offers.api.endpoint=https://example.aexp.com  // TargetedOffersAPI SDK endpoint
+oauth.api.key=auth_key_example                      // OAuth Client ID/Key
+oauth.api.secret=auth_key_secret_example            // OAuth Secret 
+proxy.protocol=http                                 // Protocol Client uses to connect to proxy/load balancer
+proxy.enabled=true                                  // Enabled or disabled proxy
+proxy.host=proxy.example.com                        // Proxy host
+proxy.port=8080                                     // Proxy port
 ```
 
 <br/>
@@ -226,7 +241,7 @@ any Open Source Project managed by the American Express Open Source Community mu
 an Agreement indicating agreement to the terms below. Except for the rights granted in this 
 Agreement to American Express and to recipients of software distributed by American Express, You
 reserve all right, title, and interest, if any, in and to Your Contributions. Please
-[fill out the Agreement](https://cla-assistant.io/americanexpress/targeted-offers-client-jvm).
+[fill out the Agreement](https://cla-assistant.io/americanexpress/targeted-offers-client-java).
 
 <br/>
 

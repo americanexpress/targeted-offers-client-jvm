@@ -15,8 +15,6 @@ package com.americanexpress.sdk.client.http;
 
 import static com.americanexpress.sdk.service.constants.OffersExceptionConstants.INTERNAL_API_EXCEPTION;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.Map;
 
 import javax.ws.rs.core.MultivaluedMap;
@@ -35,17 +33,12 @@ import com.americanexpress.sdk.exception.OffersAuthenticationError;
 import com.americanexpress.sdk.exception.OffersException;
 import com.americanexpress.sdk.exception.OffersRequestValidationError;
 import com.americanexpress.sdk.exception.ResourceNotFoundError;
-import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 
 /**
  * The HttpClient class implementation handles all the HTTP operations for PE
  * API clients
- * 
+ *
  * @author jramio
  */
 public class HttpClient {
@@ -54,8 +47,6 @@ public class HttpClient {
 	 * Client interface to connect to external service
 	 */
 	CloseableHttpClient client;
-	private ObjectMapper mapperForGetResponse = new ObjectMapper()
-			.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
 	/**
 	 * @param client
@@ -77,7 +68,7 @@ public class HttpClient {
 	 * @throws Exception
 	 */
 	public <R, T> R postClientResource(T apiRequest, String apiUrl, MultivaluedMap<String, Object> headers,
-			TypeReference<R> responseObject, Map<String, String> responseHeaders) throws OffersException {
+									   TypeReference<R> responseObject, Map<String, String> responseHeaders) throws OffersException {
 		R response = null;
 		HttpPost request = new HttpPost(apiUrl);
 		HttpEntity entity = (HttpEntity) apiRequest;
@@ -88,7 +79,7 @@ public class HttpClient {
 					.getStatusCode()
 					|| httpResponse.getStatusLine().getStatusCode() == Response.Status.CREATED.getStatusCode())) {
 				if (null != responseObject) {
-					response = generateResponse(responseObject, httpResponse);
+					response = OfferUtil.generateResponse(responseObject, httpResponse);
 				}
 				if (null != responseHeaders) {
 					extractResponseHeaders(httpResponse, responseHeaders);
@@ -102,25 +93,6 @@ public class HttpClient {
 		} catch (Exception ex) {
 			throw new OffersApiError(INTERNAL_API_EXCEPTION, ex);
 		}
-	}
-
-	/**
-	 * This method is to convert response based on content-type
-	 *
-	 * @param responseObject
-	 * @param httpResponse
-	 * @return <R> R
-	 * @throws IOException
-	 * @throws JsonParseException
-	 * @throws JsonMappingException
-	 */
-	private <R> R generateResponse(TypeReference<R> responseObject, CloseableHttpResponse httpResponse)
-			throws IOException {
-		R response = null;
-		final InputStream content = httpResponse.getEntity().getContent();
-		mapperForGetResponse.setPropertyNamingStrategy(PropertyNamingStrategy.SNAKE_CASE);
-		response = mapperForGetResponse.readValue(content, responseObject);
-		return response;
 	}
 
 	/**
@@ -157,14 +129,14 @@ public class HttpClient {
 		String developerMessage = OfferUtil.getResponseString(httpResponse.getEntity());
 		Response.Status status = Response.Status.fromStatusCode(httpResponse.getStatusLine().getStatusCode());
 		switch (status) {
-		case NOT_FOUND:
-			return new ResourceNotFoundError();
-		case BAD_REQUEST:
-			return new OffersRequestValidationError(developerMessage);
-		case UNAUTHORIZED:
-			return new OffersAuthenticationError(developerMessage);
-		default:
-			return new OffersApiError(developerMessage);
+			case NOT_FOUND:
+				return new ResourceNotFoundError();
+			case BAD_REQUEST:
+				return new OffersRequestValidationError(developerMessage);
+			case UNAUTHORIZED:
+				return new OffersAuthenticationError(developerMessage);
+			default:
+				return new OffersApiError(developerMessage);
 		}
 	}
 }

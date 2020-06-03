@@ -30,13 +30,13 @@
 		<com.fasterxml.jackson.core.version>2.9.4</com.fasterxml.jackson.core.version>
 		<jersey-client.version>2.25.1</jersey-client.version>
 		<jersey-hk2.version>2.26</jersey-hk2.version>
-		<org.powermock.version>1.6.1</org.powermock.version>
+		<org.powermock.version>1.7.1</org.powermock.version>
 		<junit.version>4.12</junit.version>
 		<laas_java_client.version>4.1.1</laas_java_client.version>
 		<easymock.version>3.1</easymock.version>
 		<easymockclassextension.version>2.5.2</easymockclassextension.version>
-		<acq-client-common.version>1.3.5-RELEASE-SNAPSHOT</acq-client-common.version>
 		<org.google.code.version>2.8.6</org.google.code.version>
+		<org.mockito.version>1.9.5</org.mockito.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -144,6 +144,11 @@
 			<artifactId>commons-io</artifactId>
 			<version>1.3.2</version>
 		</dependency>
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-core</artifactId>
+			<version>${org.mockito.version}</version>
+		</dependency>
 		<!-- Testing -->
 	</dependencies>
 	<build>
@@ -244,4 +249,59 @@
 			</plugin>
 		</plugins>
 	</reporting>
+	<profiles>
+		<profile>
+			<id>sonar-coverage</id>
+			<activation>
+				<activeByDefault>true</activeByDefault>
+			</activation>
+			<build>
+				<pluginManagement>
+					<plugins>
+						<plugin>
+							<groupId>org.jacoco</groupId>
+							<artifactId>jacoco-maven-plugin</artifactId>
+							<version>0.8.5</version>
+						</plugin>
+					</plugins>
+				</pluginManagement>
+				<plugins>
+					<plugin>
+						<groupId>org.jacoco</groupId>
+						<artifactId>jacoco-maven-plugin</artifactId>
+						<configuration>
+							<append>true</append>
+							<excludes>
+								<exclude>**/models/**/*</exclude>
+								<exclude>**/constants/**/*</exclude>
+								<exclude>**/configuration/**/*</exclude>
+								<exclude>**/exception/**/*</exclude>
+							</excludes>
+						</configuration>
+						<executions>
+							<execution>
+								<id>agent-for-ut</id>
+								<goals>
+									<goal>prepare-agent</goal>
+								</goals>
+							</execution>
+							<execution>
+								<id>agent-for-it</id>
+								<goals>
+									<goal>prepare-agent-integration</goal>
+								</goals>
+							</execution>
+							<execution>
+								<id>jacoco-site</id>
+								<phase>verify</phase>
+								<goals>
+									<goal>report</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
 </project>

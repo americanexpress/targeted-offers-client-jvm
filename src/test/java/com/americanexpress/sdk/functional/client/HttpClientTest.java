@@ -14,17 +14,20 @@
 package com.americanexpress.sdk.functional.client;
 
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 
+import com.americanexpress.sdk.exception.OffersApiError;
+import com.americanexpress.sdk.exception.OffersAuthenticationError;
+import com.americanexpress.sdk.exception.OffersRequestValidationError;
+import com.americanexpress.sdk.exception.ResourceNotFoundError;
+import com.americanexpress.sdk.models.targeted_offers.OffersResponse;
+import org.apache.http.Header;
 import org.apache.http.HttpEntity;
-import org.apache.http.HttpRequest;
 import org.apache.http.StatusLine;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.easymock.EasyMock;
 import org.junit.Before;
@@ -35,58 +38,112 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 import com.americanexpress.sdk.client.core.utils.OfferUtil;
-import com.americanexpress.sdk.client.http.ApiClientFactory;
 import com.americanexpress.sdk.client.http.HttpClient;
-import com.americanexpress.sdk.configuration.Config;
-import com.americanexpress.sdk.configuration.JWEConfig;
-import com.americanexpress.sdk.configuration.ProxyConfig;
-import com.americanexpress.sdk.service.OffersService;
-import com.americanexpress.sdk.service.TargetedOffersClient;
 import com.fasterxml.jackson.core.type.TypeReference;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({ TargetedOffersClient.class, OffersService.class, HttpClient.class, ApiClientFactory.class,
-		Config.class, JWEConfig.class, ProxyConfig.class, CloseableHttpClient.class, OfferUtil.class,
-		HttpRequest.class })
+@PrepareForTest({ OfferUtil.class })
 public class HttpClientTest {
 
-	public Config config;
-	public HttpClient httpClient;
-	public CloseableHttpClient client;
+	private CloseableHttpClient closeableHttpClient;
+	private HttpClient httpClient;
+	private HttpEntity httpEntity;
+	private String apiUrl;
+	private MultivaluedMap<String, Object> headers;
+	private Map<String, String> responseHeaders;
+	private CloseableHttpResponse response;
+	private StatusLine statusLine;
 
 	@Before
 	public void setUp() throws Exception {
-		config = EasyMock.createNiceMock(Config.class);
-		client = EasyMock.createNiceMock(CloseableHttpClient.class);
-		httpClient = EasyMock.createNiceMock(HttpClient.class);
+		closeableHttpClient = EasyMock.createNiceMock(CloseableHttpClient.class);
+		httpClient = new HttpClient(closeableHttpClient);
+		httpEntity = EasyMock.createNiceMock(HttpEntity.class);
+		apiUrl = "apiUrl";
+		headers = new MultivaluedHashMap<>();
+		responseHeaders = new HashMap<>();
+		response = EasyMock.createNiceMock(CloseableHttpResponse.class);
+		statusLine = EasyMock.createNiceMock(StatusLine.class);
+
+		EasyMock.expect(closeableHttpClient.execute(EasyMock.isA(HttpPost.class))).andReturn(response);
+		EasyMock.replay(closeableHttpClient);
+
+		EasyMock.expect(response.getEntity()).andReturn(httpEntity).anyTimes();
+		EasyMock.expect(response.getStatusLine()).andReturn(statusLine).anyTimes();
+		EasyMock.expect(response.getAllHeaders()).andReturn(new Header[0]);
+		EasyMock.replay(response);
+
+		PowerMock.mockStatic(OfferUtil.class);
 	}
 
 	@SuppressWarnings("unchecked")
 	@Test
-	public void testPostClientResource_success() throws Exception {
-		Object response = PowerMock.createMock(Object.class);
-		PowerMock.mockStatic(ApiClientFactory.class);
-		EasyMock.expect(ApiClientFactory.createHttpClient(EasyMock.anyObject())).andReturn(httpClient);
-		PowerMock.replay(ApiClientFactory.class);
+	public void testPostClientResource() throws Exception {
+		EasyMock.expect(statusLine.getStatusCode()).andReturn(200);
+		EasyMock.replay(statusLine);
 
-		EasyMock.expect(httpClient.postClientResource(EasyMock.isA(HttpEntity.class), EasyMock.isA(String.class),
-				EasyMock.anyObject(), (TypeReference<Object>) EasyMock.isA(Object.class), EasyMock.anyObject()))
-				.andReturn(response);
-		EasyMock.replay(httpClient);
-		assertNotNull(response);
+		EasyMock.expect(OfferUtil.generateResponse(EasyMock.anyObject(), EasyMock.isA(CloseableHttpResponse.class)))
+				.andReturn(new OffersResponse());
+		PowerMock.replay(OfferUtil.class);
+
+		OffersResponse result = httpClient.postClientResource(
+				httpEntity, apiUrl, headers, new TypeReference<OffersResponse>() {}, responseHeaders);
+		assertNotNull(result);
 	}
-	
-	@Test
-	public void testpostClientResource_failure() throws Exception {
-		HttpEntity entity = new StringEntity("request");
-		String apiUrl = "url";
-		MultivaluedMap<String, Object> headers = new MultivaluedHashMap<String, Object>();
-		CloseableHttpResponse httpResponse = EasyMock.createNiceMock(CloseableHttpResponse.class);
-		EasyMock.expect(client.execute(EasyMock.isA(HttpPost.class))).andReturn(httpResponse);
 
-		Object response = httpClient.postClientResource(entity, apiUrl, headers, new TypeReference<StatusLine>() {
-		}, null);
-		assertNull(response);
+	@Test (expected = ResourceNotFoundError.class)
+	public void testPostClientResource_ResourceNotFound() throws Exception{
+		EasyMock.expect(statusLine.getStatusCode()).andReturn(404).anyTimes();
+		EasyMock.replay(statusLine);
+
+		EasyMock.expect(OfferUtil.getResponseString(EasyMock.isA(HttpEntity.class)))
+				.andReturn("response string");
+		PowerMock.replay(OfferUtil.class);
+
+		httpClient.postClientResource(httpEntity, apiUrl, headers,
+				new TypeReference<OffersResponse>() {}, responseHeaders);
+	}
+
+	@Test (expected = OffersRequestValidationError.class)
+	public void testPostClientResource_RequestValidationError() throws Exception{
+		EasyMock.expect(statusLine.getStatusCode()).andReturn(400).anyTimes();
+		EasyMock.replay(statusLine);
+
+		EasyMock.expect(OfferUtil.getResponseString(EasyMock.isA(HttpEntity.class)))
+				.andReturn("response string");
+		PowerMock.replay(OfferUtil.class);
+
+		httpClient.postClientResource(httpEntity, apiUrl, headers,
+				new TypeReference<OffersResponse>() {}, responseHeaders);
+	}
+
+	@Test (expected = OffersAuthenticationError.class)
+	public void testPostClientResource_AuthenticationError() throws Exception{
+		EasyMock.expect(statusLine.getStatusCode()).andReturn(401).anyTimes();
+		EasyMock.replay(statusLine);
+
+		EasyMock.expect(OfferUtil.getResponseString(EasyMock.isA(HttpEntity.class)))
+				.andReturn("response string");
+		PowerMock.replay(OfferUtil.class);
+
+		httpClient.postClientResource(httpEntity, apiUrl, headers,
+				new TypeReference<OffersResponse>() {}, responseHeaders);
+	}
+
+	@Test (expected = OffersApiError.class)
+	public void testPostClientResource_PrefillApiError() throws Exception{
+		EasyMock.expect(statusLine.getStatusCode()).andReturn(500).anyTimes();
+		EasyMock.replay(statusLine);
+
+		EasyMock.expect(OfferUtil.getResponseString(EasyMock.isA(HttpEntity.class)))
+				.andReturn("response string");
+		PowerMock.replay(OfferUtil.class);
+
+		httpClient.postClientResource(httpEntity, apiUrl, headers,
+				new TypeReference<OffersResponse>() {}, responseHeaders);
 	}
 
 }

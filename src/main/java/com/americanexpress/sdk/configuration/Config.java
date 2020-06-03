@@ -13,6 +13,7 @@
  */
 package com.americanexpress.sdk.configuration;
 
+import lombok.Builder;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 
 import lombok.Getter;
@@ -21,11 +22,12 @@ import lombok.Setter;
 /**
  * This configuration class holds the required builder configuration to startup
  * the Targeted offers SDK application
- * 
+ *
  * @author jramio
  */
 @Getter
 @Setter
+@Builder
 public class Config {
 
 	/**
@@ -57,7 +59,7 @@ public class Config {
 	/**
 	 * Proxy Configuration (Optional, if needs to be tested through a corporate
 	 * proxy
-	 * 
+	 *
 	 */
 	private ProxyConfig proxyConfig;
 
@@ -66,94 +68,4 @@ public class Config {
 	 */
 	private JWEConfig jweConfig;
 
-	public String getUrl() {
-		return url;
-	}
-
-	public String getApiKey() {
-		return apiKey;
-	}
-
-	public String getApiSecret() {
-		return apiSecret;
-	}
-
-	public String getAccessToken() {
-		return accessToken;
-	}
-
-	public void setAccessToken(String accessToken) {
-		this.accessToken = accessToken;
-	}
-
-	public SSLConnectionSocketFactory getSocketFactory() {
-		return socketFactory;
-	}
-
-	public ProxyConfig getProxyConfig() {
-		return proxyConfig;
-	}
-
-	public JWEConfig getJweConfig() {
-		return jweConfig;
-	}
-
-	private Config() {
-
-	}
-
-	/**
-	 * Builder class for creating new instance.
-	 * 
-	 */
-	public static class Builder {
-
-		private String url;
-
-		private String apiKey;
-
-		private String apiSecret;
-
-		private String accessToken;
-
-		private SSLConnectionSocketFactory socketFactory;
-
-		private ProxyConfig proxyConfig;
-
-		private JWEConfig jweConfig;
-
-		public Builder(final String url, final String apiKey, final String apiSecret, final String accessToken,
-				final SSLConnectionSocketFactory socketFactory) {
-			this.url = url;
-			this.apiKey = apiKey;
-			this.apiSecret = apiSecret;
-			this.accessToken = accessToken;
-			this.proxyConfig = new ProxyConfig(false);
-			this.jweConfig = new JWEConfig(false);
-			this.socketFactory = socketFactory;
-		}
-
-		public Builder setProxyConfig(ProxyConfig proxyConfig) {
-			this.proxyConfig = proxyConfig;
-			return this;
-		}
-
-		public Builder setJweConfig(JWEConfig jweConfig) {
-			this.jweConfig = jweConfig;
-			return this;
-		}
-
-		public Config build() {
-			Config config = new Config();
-			config.apiKey = this.apiKey;
-			config.apiSecret = this.apiSecret;
-			config.accessToken = this.accessToken;
-			config.jweConfig = this.jweConfig;
-			config.proxyConfig = this.proxyConfig;
-			config.socketFactory = this.socketFactory;
-			config.url = this.url;
-			return config;
-		}
-
-	}
 }
