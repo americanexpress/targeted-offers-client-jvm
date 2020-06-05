@@ -56,6 +56,8 @@ public class OffersApiConstants {
 	public static final String REQUEST_HEADER_REQUEST_ID = "request_id";
 	public static final String REQUEST_HEADER_USER_CONSENT_STATUS = "user_consent_status";
 	public static final String REQUEST_HEADER_USER_CONSENT_TIMESTAMP = "user_consent_timestamp";
+	public static final String REQUEST_HEADER_SESSION_TOKEN = "session_token";
+	public static final String REQUEST_HEADER_COUNTRY_CODE = "country_code";
 	public static final String REQUEST_HEADER_MESSAGE_TYPE_ID = "message_type_id";
 	public static final String REQUEST_HEADER_CONTENT_TYPE = "content-type";
 	public static final String OFFERS_PULL_RESOURCE_PATH = "/acquisition/digital/v1/offers/cards/targeted_offers";

@@ -14,12 +14,17 @@
 package com.americanexpress.sdk.client.core.utils;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import org.apache.http.HttpEntity;
+import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.util.EntityUtils;
 
@@ -34,7 +39,7 @@ import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 /**
  * The OfferUtil class handles the Offers Service API call specific
  * utility methods
- * 
+ *
  * @author jramio
  */
 public class OfferUtil {
@@ -44,8 +49,8 @@ public class OfferUtil {
 	}
 
 	/**
-	 * This method is responsible to build request entity for HttpClient
-	 * 
+	 * This method builds request entity for HttpClient
+	 *
 	 * @param request
 	 * @return HttpEntity
 	 * @throws UnsupportedEncodingException
@@ -59,7 +64,7 @@ public class OfferUtil {
 
 	/**
 	 * This method retrieves the Json to deserialized string
-	 * 
+	 *
 	 * @param deserialized
 	 * @return <T> String
 	 * @throws IOException
@@ -73,18 +78,20 @@ public class OfferUtil {
 
 	/**
 	 * This method is the builder for Targeted offers request Headers
-	 * 
+	 *
 	 * @param requestHeader
 	 * @param config
 	 * @return MultivaluedMap<String, Object>
 	 */
 	public static MultivaluedMap<String, Object> buildHeaders(RequestHeader requestHeader, Config config) {
 		MultivaluedMap<String, Object> headers = new MultivaluedHashMap<>();
-		headers.add(OffersApiConstants.REQUEST_HEADER_USER_CONSENT_STATUS, requestHeader.isUserConsentStatus());
-		headers.add(OffersApiConstants.REQUEST_HEADER_USER_CONSENT_TIMESTAMP, requestHeader.getUserConsentTimestamp());
-		headers.add(OffersApiConstants.REQUEST_HEADER_MESSAGE_TYPE_ID, requestHeader.getMessageTypeId());
 		headers.add(OffersApiConstants.REQUEST_HEADER_REQUEST_ID, requestHeader.getRequestId());
 		headers.add(OffersApiConstants.REQUEST_HEADER_CLIENT_ID, requestHeader.getClientId());
+		headers.add(OffersApiConstants.REQUEST_HEADER_USER_CONSENT_STATUS, requestHeader.isUserConsentStatus());
+		headers.add(OffersApiConstants.REQUEST_HEADER_USER_CONSENT_TIMESTAMP, requestHeader.getUserConsentTimestamp());
+		headers.add(OffersApiConstants.REQUEST_HEADER_SESSION_TOKEN, requestHeader.getSessionToken());
+		headers.add(OffersApiConstants.REQUEST_HEADER_COUNTRY_CODE, requestHeader.getCountryCode());
+		headers.add(OffersApiConstants.REQUEST_HEADER_MESSAGE_TYPE_ID, requestHeader.getMessageTypeId());
 		headers.add(OffersApiConstants.REQUEST_HEADER_CONTENT_TYPE, "application/json");
 		headers.add(OffersApiConstants.MAC_ID, config.getApiKey());
 		headers.add(OffersApiConstants.AUTHORIZATION, OffersApiConstants.BEARER + " " + config.getAccessToken());
@@ -93,7 +100,7 @@ public class OfferUtil {
 
 	/**
 	 * This method gets the response data string
-	 * 
+	 *
 	 * @param entity
 	 * @return String
 	 */
@@ -106,5 +113,26 @@ public class OfferUtil {
 			}
 		}
 		return null;
+	}
+
+	/**
+	 * This method converts response based on content-type
+	 *
+	 * @param responseObject
+	 * @param httpResponse
+	 * @return <R> R
+	 * @throws IOException
+	 * @throws JsonParseException
+	 * @throws JsonMappingException
+	 */
+	public static <R> R generateResponse(TypeReference<R> responseObject, CloseableHttpResponse httpResponse)
+			throws IOException {
+		R response = null;
+		final InputStream content = httpResponse.getEntity().getContent();
+		ObjectMapper mapperForGetResponse = new ObjectMapper()
+				.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+		mapperForGetResponse.setPropertyNamingStrategy(PropertyNamingStrategy.SNAKE_CASE);
+		response = mapperForGetResponse.readValue(content, responseObject);
+		return response;
 	}
 }

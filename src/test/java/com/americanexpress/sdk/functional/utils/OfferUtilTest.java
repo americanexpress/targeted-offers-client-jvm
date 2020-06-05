@@ -16,92 +16,36 @@ package com.americanexpress.sdk.functional.utils;
 import static org.junit.Assert.assertNotNull;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 
-import javax.ws.rs.core.MultivaluedHashMap;
-import javax.ws.rs.core.MultivaluedMap;
-
+import com.americanexpress.sdk.client.http.ApiClientFactory;
+import com.americanexpress.sdk.models.targeted_offers.TargetedOffersRequest;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.nimbusds.jose.JWEHeader;
 import org.apache.http.HttpEntity;
-import org.apache.http.StatusLine;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.easymock.classextension.EasyMock;
-import org.junit.Before;
+import org.easymock.EasyMock;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.powermock.api.easymock.PowerMock;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 import com.americanexpress.sdk.client.core.utils.OfferUtil;
-import com.americanexpress.sdk.client.http.HttpClient;
 import com.americanexpress.sdk.configuration.Config;
 import com.americanexpress.sdk.models.entities.RequestHeader;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({ HttpEntity.class, ObjectMapper.class })
+@PrepareForTest({HttpEntity.class, ObjectMapper.class, ApiClientFactory.class, JWEHeader.class})
 public class OfferUtilTest {
 
-	public HttpEntity httpEntity;
-	public ObjectMapper mapper;
-	public HttpClient httpClient;
-	public CloseableHttpClient client;
-	public Object request;
-
-	@Mock
-	private PropertyNamingStrategy propertyNamingStrategy;
-
-	@Mock
-	private RequestHeader requestHeader;
-
-	@Mock
-	private Config config;
-
-	@Mock
-	private OfferUtil offerUtil;
-
-	@Before
-	public void setUp() throws Exception {
-		client = EasyMock.createNiceMock(CloseableHttpClient.class);
-		httpClient = new HttpClient(client);
-
-		MockitoAnnotations.initMocks(this);
-	}
 
 	@Test
-	public void testbuildRequestEntity_success() throws Exception {
-		StatusLine statusline = EasyMock.createNiceMock(StatusLine.class);
-
-		CloseableHttpResponse response = EasyMock.createNiceMock(CloseableHttpResponse.class);
-		EasyMock.expect(client.execute(EasyMock.isA(HttpPost.class))).andReturn(response);
-		EasyMock.expect(response.getStatusLine()).andReturn(statusline);
-		PowerMock.replay(statusline);
-
-		mapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-		HttpEntity entity = new StringEntity(mapper.writeValueAsString(request));
-
-		assertNotNull(entity);
-		OfferUtil.buildRequestEntity(request);
-	}
-
-	@Test(expected = Exception.class)
-	public void testbuildRequestEntity_failure() throws Exception {
-		HttpEntity entity = new StringEntity("request");
-		String apiUrl = "url";
-		MultivaluedMap<String, Object> headers = new MultivaluedHashMap<String, Object>();
-
-		CloseableHttpResponse response = EasyMock.createNiceMock(CloseableHttpResponse.class);
-		EasyMock.expect(client.execute(EasyMock.isA(HttpPost.class))).andReturn(response);
-
-		httpClient.postClientResource(entity, apiUrl, headers, new TypeReference<StatusLine>() {
-		}, null);
+	public void testBuildRequestEntity() throws UnsupportedEncodingException, JsonProcessingException {
+		TargetedOffersRequest targetedOffersRequest = new TargetedOffersRequest();
+		HttpEntity requestEntity = OfferUtil.buildRequestEntity(targetedOffersRequest);
+		assertNotNull(requestEntity);
 	}
 
 	@Test
@@ -111,6 +55,10 @@ public class OfferUtilTest {
 
 	@Test
 	public void testBuildHeaders() {
+		Config config = org.easymock.EasyMock.createMock(Config.class);
+		org.easymock.EasyMock.expect(config.getApiKey()).andReturn("api_key");
+		org.easymock.EasyMock.expect(config.getAccessToken()).andReturn("access_token");
+		EasyMock.replay(config);
 		assertNotNull(OfferUtil.buildHeaders(buildRequestHeader(), config));
 	}
 
@@ -123,11 +71,14 @@ public class OfferUtilTest {
 	}
 
 	private RequestHeader buildRequestHeader() {
+		RequestHeader requestHeader = new RequestHeader();
+		requestHeader.setRequestId("request id");
+		requestHeader.setClientId("client id");
 		requestHeader.setUserConsentStatus(true);
-		requestHeader.setUserConsentTimestamp("2020-02-10 09:17:04.101 MST");
-		requestHeader.setMessageTypeId("1201");
-		requestHeader.setRequestId("test");
-		requestHeader.setClientId("E0222A9A432B24D9");
+		requestHeader.setUserConsentTimestamp("user consent timestamp");
+		requestHeader.setSessionToken("session token");
+		requestHeader.setCountryCode("country code");
+		requestHeader.setMessageTypeId("message type id");
 		return requestHeader;
 	}
 }

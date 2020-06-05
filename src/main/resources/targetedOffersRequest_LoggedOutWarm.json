@@ -1,0 +1,44 @@
+{
+  "applicants": [
+    {
+      "type": "basic",
+      "personal_info": {
+        "business_owner": "YES"
+      }
+    }
+  ],
+  "partner": {
+    "partner_name": "ABC PARTNER",
+    "account_tenure_date": "19650701",
+    "account_number": "1234567890",
+    "loyalty_membership_tier": "DM"
+  },
+  "transaction_cost": {
+    "currency": "USD",
+    "amount": "3000"
+  },
+  "personalization": {
+    "page_id": "trip-summary-rev",
+    "attributes": [
+      {
+        "value": "9417540185",
+        "key": "PARTNER_UUID"
+      }
+    ]
+  },
+  "application_context": {
+    "channel": "WEB",
+    "session_id": "Ae8icl3AwieSsdjSDe8383",
+    "language_code": "EN",
+    "referring_url": "https://www.example.com/",
+    "user_session_status": "WARM_COOKIED"
+  },
+  "device_info": {
+    "user_agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 12_0_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.0 Mobile/15E148 Safari/604.1",
+    "geo_zipcode": "10285",
+    "ip_address": "98.219.81.XXX",
+    "screen_resolution": "718X412",
+    "browser_area_size": "718X412",
+    "private_browsing_indicator": "Y"
+  }
+}

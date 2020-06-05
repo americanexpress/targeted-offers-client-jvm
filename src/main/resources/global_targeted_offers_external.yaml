@@ -795,10 +795,10 @@ components:
           description: type of offers the user is interested in,ex. TRAVEL_REWARDS,CASH_BACK,REWARDS_POINTS,NO_ANUAL_FEE.
         business_owner:
           type: string
-          description: YES - if the applicant is a business owner 
-          enum: 
-            - YES
-            - NO
+          description: YES - if the applicant is a business owner
+          enum:
+            - "YES"
+            - "NO"
     Phone:
       type: object
       properties:
@@ -969,43 +969,43 @@ components:
           description: customer flag.
       description: Either user_info or applicants must be sent. Send user_info for encrypted payload or send applicants for plaintext payload
     DeviceInfo:
-        type: object
-        properties:
-          user_agent:
-            type: string
-            description: User Agent details from browser where prospect has accessed the page
-          geo_zipcode:
-            type: string
-            description: Zipcode as derived based on inferred location.
-          device_type:
-            type: string
-            description: Type of the device example - PC, Mobile
-          ip_address:
-            type: string
-            description: customer's IP Address.
-          screen_resolution:
-            type: string
-            description: resolution of the screen - example -1024 x 1284.
-          installed_browser_plugins:
-            type: string
-            description: Installed browser plugins comma seperated.
-          browser_area_size:
-            type: string
-            description: Browser's Area size.
-          private_browsing_indicator:
-            type: string
-            description: This indicates is the user is visiting with Private Browser indicator. The possible values
-            enum: 
-              - Y
-              - N
-              - NA      
+      type: object
+      properties:
+        user_agent:
+          type: string
+          description: User Agent details from browser where prospect has accessed the page
+        geo_zipcode:
+          type: string
+          description: Zipcode as derived based on inferred location.
+        device_type:
+          type: string
+          description: Type of the device example - PC, Mobile
+        ip_address:
+          type: string
+          description: customer's IP Address.
+        screen_resolution:
+          type: string
+          description: resolution of the screen - example -1024 x 1284.
+        installed_browser_plugins:
+          type: string
+          description: Installed browser plugins comma seperated.
+        browser_area_size:
+          type: string
+          description: Browser's Area size.
+        private_browsing_indicator:
+          type: string
+          description: This indicates is the user is visiting with Private Browser indicator. The possible values
+          enum:
+            - Y
+            - N
+            - NA
     ApplicationContext:
       type: object
       properties:
         channel:
           type: string
           description: 'type of channel from where the request is originated, example values - WEB.'
-          enum: 
+          enum:
             - WEB
             - MOBILE
             - CUSTOMER_SERVICE
@@ -1024,7 +1024,7 @@ components:
         user_session_status:
           type: string
           description: User experience.
-          enum: 
+          enum:
             - AUTHENTICATED
             - NOT_AUTHENTICATED
             - WARM_COOKIED

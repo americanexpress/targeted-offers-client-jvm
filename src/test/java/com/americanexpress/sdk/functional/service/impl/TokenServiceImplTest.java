@@ -15,71 +15,52 @@ package com.americanexpress.sdk.functional.service.impl;
 
 import static org.junit.Assert.assertNotNull;
 
-import java.util.Properties;
-
+import com.americanexpress.sdk.exception.OffersException;
+import com.americanexpress.sdk.models.entities.*;
 import org.apache.http.HttpEntity;
-import org.apache.http.impl.client.CloseableHttpClient;
 import org.easymock.EasyMock;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.powermock.api.easymock.PowerMock;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
 
-import com.americanexpress.sdk.client.http.ApiClientFactory;
 import com.americanexpress.sdk.client.http.HttpClient;
 import com.americanexpress.sdk.configuration.Config;
-import com.americanexpress.sdk.models.entities.AccessTokenResponse;
-import com.americanexpress.sdk.models.entities.Token;
-import com.americanexpress.sdk.models.entities.TokenRequest;
-import com.americanexpress.sdk.models.entities.TokenResponse;
 import com.americanexpress.sdk.service.TokenService;
 import com.americanexpress.sdk.service.impl.TokenServiceImpl;
 import com.fasterxml.jackson.core.type.TypeReference;
 
-@RunWith(PowerMockRunner.class)
-@PrepareForTest({ TokenService.class, TokenServiceImpl.class, Token.class, Config.class, CloseableHttpClient.class,
-		HttpClient.class, ApiClientFactory.class })
+import javax.ws.rs.core.MultivaluedMap;
+
 public class TokenServiceImplTest {
 
-	public Token token;
-	public CloseableHttpClient client;
-	public Config config;
 	private HttpClient authClient;
-	private TokenServiceImpl tokenServiceImpl;
+	private TokenService tokenService;
 	private TokenRequest tokenRequest;
 	private TokenResponse tokenResponse;
-	public AccessTokenResponse accessTokenResponse;
-
-	Properties tokenServiceConfiguration = null;
 
 	@Before
-	public void setUp() throws Exception {
+	public void setUp() {
+		Config config = Config.builder().accessToken("accessToken")
+				.url("https://example.americanexpress.com").build();
 		authClient = EasyMock.createNiceMock(HttpClient.class);
-		config = EasyMock.createNiceMock(Config.class);
-		client = EasyMock.createNiceMock(CloseableHttpClient.class);
-		tokenServiceImpl = EasyMock.createNiceMock(TokenServiceImpl.class);
-		tokenRequest = EasyMock.createNiceMock(TokenRequest.class);
-		tokenResponse = EasyMock.createNiceMock(TokenResponse.class);
+		tokenService = new TokenServiceImpl(config, authClient);
+		tokenRequest = new TokenRequest();
+		tokenRequest.setRequestHeader(new RequestHeader());
+		tokenResponse = new TokenResponse();
 	}
 
-	@SuppressWarnings("unchecked")
 	@Test
-	public void testGetSessionToken() throws Exception {
-		PowerMock.mockStatic(ApiClientFactory.class);
-		EasyMock.expect(ApiClientFactory.createHttpClient(EasyMock.anyObject())).andReturn(authClient);
-		PowerMock.replay(ApiClientFactory.class);
-
-		EasyMock.expect(authClient.postClientResource(EasyMock.isA(HttpEntity.class), EasyMock.isA(String.class),
-				EasyMock.anyObject(), (TypeReference<Object>) EasyMock.isA(Object.class), EasyMock.anyObject()))
+	public void testGetSessionToken() throws OffersException {
+		EasyMock.expect(authClient.postClientResource(EasyMock.isA(HttpEntity.class),
+				EasyMock.isA(String.class),
+				EasyMock.isA(MultivaluedMap.class),
+				(TypeReference<Object>) EasyMock.isA(Object.class),
+				EasyMock.isNull()))
 				.andReturn(tokenResponse);
 		EasyMock.replay(authClient);
 
-		EasyMock.expect(tokenServiceImpl.getSessionToken(tokenRequest)).andReturn(tokenResponse);
-		EasyMock.replay(tokenResponse);
-
-		tokenResponse.setRequestHeader(tokenRequest.getRequestHeader());
-		assertNotNull(tokenResponse);
+		TokenResponse result = tokenService.getSessionToken(tokenRequest);
+		assertNotNull(result);
 	}
+
+
 }

@@ -32,6 +32,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.ssl.SSLContextBuilder;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -48,74 +49,86 @@ import static org.junit.Assert.assertNotNull;
 
 public class TargetedOffersSample {
 
-	/**
-	 * Sample for testing Targeted offers
-	 *
-	 * @return OffersResponse
-	 * @throws OffersException
-	 */
-	@Test
-	public void getTargetedOffersSample() {
-		OffersResponse offersResponse = null;
-		try {
-			TargetedOffersClient targetedOffersClient = createTargetedOffersClient();
-			/**
-			 * if a valid access Token is already available in the cache, please build the
-			 * configuration with the available token. getting Authentication Token call is
-			 * not needed.
-			 */
-			AccessTokenResponse accessTokenResponse = getAuthenticationToken(targetedOffersClient);
+	TargetedOffersClient targetedOffersClient;
+	OffersService offersService;
+	ObjectMapper objectMapper;
 
-			if (null != accessTokenResponse && StringUtils.isNotEmpty(accessTokenResponse.getAccessToken())) {
-				targetedOffersClient.setAccessToken(accessTokenResponse.getAccessToken());
-
-				System.out.println("AccessToken: " + accessTokenResponse.getAccessToken());
-
-				OffersService offersService = targetedOffersClient.getOffersService();
-
-				ObjectMapper objectMapper = new ObjectMapper()
-						.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-						.setPropertyNamingStrategy(PropertyNamingStrategy.SNAKE_CASE);
-
-				RequestHeader requestHeader = objectMapper.readValue(Thread.currentThread()
-								.getContextClassLoader().getResourceAsStream("targetedOffersRequestHeader.json"),
-						RequestHeader.class);
-
-				com.americanexpress.sdk.models.targeted_offers.TargetedOffersRequest targetedOffersRequest = objectMapper.readValue(Thread.currentThread()
-						.getContextClassLoader().getResourceAsStream("targetedOffersRequest.json"),
-						TargetedOffersRequest.class);
-				offersResponse = offersService.getOffers(targetedOffersRequest, requestHeader);
-
-				System.out.println("Offer: " + offersResponse.toString());
-
-				/**
-				 * Acknowledging offers
-				 */
-				requestHeader = objectMapper.readValue(Thread.currentThread()
-								.getContextClassLoader().getResourceAsStream("acknowledgementRequestHeader.json"),
-						RequestHeader.class);
-				AcknowledgementRequest acknowledgementRequest = new AcknowledgementRequest();
-				acknowledgementRequest
-						.setApplicantRequestTrackingId(offersResponse.getApplicantRequestTrackingId());
-				Boolean isOfferAcknowledged = offersService.acknowledgeOffers(acknowledgementRequest, requestHeader);
-				assertEquals(true, isOfferAcknowledged);
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+	@Before
+	public void setUp() throws Exception {
+		targetedOffersClient = createTargetedOffersClient();
+		offersService = targetedOffersClient.getOffersService();
+		objectMapper = new ObjectMapper()
+				.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+				.setPropertyNamingStrategy(PropertyNamingStrategy.SNAKE_CASE);
 	}
 
 	/**
-	 * Sample for testing Session Tokens
+	 * Sample for getting Targeted offers in the Logged In state, with only PII
 	 *
-	 * @throws OffersException
+	 */
+	@Test
+	public void getTargetedOffersSample_loggedInPiiOnly () {
+		OffersResponse offersResponse = getTargetedOffers(
+				"targetedOffersRequestHeader_LoggedInPiiOnly.json",
+				"targetedOffersRequest_LoggedInPiiOnly.json");
+		assertNotNull(offersResponse);
+
+		boolean isOfferAcknowledged = acknowledgeOffers(offersResponse);
+		assertEquals(true, isOfferAcknowledged);
+	}
+
+	/**
+	 * Sample for getting Targeted offers in the Logged In state, with both PII and Session Data
+	 *
+	 */
+	@Test
+	public void getTargetedOffersSample_loggedInPiiAndSessionData () {
+		OffersResponse offersResponse = getTargetedOffers(
+				"targetedOffersRequestHeader_LoggedInPiiAndSessionData.json",
+				"targetedOffersRequest_LoggedInPiiAndSessionData.json");
+		assertNotNull(offersResponse);
+
+		boolean isOfferAcknowledged = acknowledgeOffers(offersResponse);
+		assertEquals(true, isOfferAcknowledged);
+	}
+
+	/**
+	 * Sample for getting Targeted offers in the Warm Logged Out state
+	 *
+	 */
+	@Test
+	public void getTargetedOffersSample_loggedOutWarm () {
+		OffersResponse offersResponse = getTargetedOffers(
+				"targetedOffersRequestHeader_LoggedOutWarm.json",
+				"targetedOffersRequest_LoggedOutWarm.json");
+		assertNotNull(offersResponse);
+
+		boolean isOfferAcknowledged = acknowledgeOffers(offersResponse);
+		assertEquals(true, isOfferAcknowledged);
+	}
+
+	/**
+	 * Sample for getting Targeted offers in the Full Logged Out state
+	 */
+	@Test
+	public void getTargetedOffersSample_loggedOutFull () {
+		OffersResponse offersResponse = getTargetedOffers(
+				"targetedOffersRequestHeader_LoggedOutFull.json",
+				"targetedOffersRequest_LoggedOutFull.json");
+		assertNotNull(offersResponse);
+
+		boolean isOfferAcknowledged = acknowledgeOffers(offersResponse);
+		assertEquals(true, isOfferAcknowledged);
+	}
+
+	/**
+	 * Sample for getting Session Tokens
+	 *
 	 */
 	@Test
 	public void getSessionTokenSample() {
 		TokenResponse tokenResponse = null;
 		try {
-			TargetedOffersClient targetedOffersClient = createTargetedOffersClient();
-
 			/**
 			 * if a valid access Token is already available in the cache, please build the
 			 * configuration with the available token. getting Authentication Token call is
@@ -130,8 +143,6 @@ public class TargetedOffersSample {
 
 				TokenService tokenService = targetedOffersClient.getTokenService();
 
-				ObjectMapper objectMapper = new ObjectMapper()
-						.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 				/**
 				 * Session Token call
 				 */
@@ -150,7 +161,68 @@ public class TargetedOffersSample {
 	}
 
 	/**
-	 * Initializes the HTTP Client instance to get AAM details bdaas API
+	 * Helper method for getting Targeted offers
+	 *
+	 * @param headerJson
+	 * @param requestJson
+	 * @return OffersResponse
+	 */
+	private OffersResponse getTargetedOffers(String headerJson, String requestJson) {
+		OffersResponse offersResponse = null;
+		try {
+			/**
+			 * if a valid access Token is already available in the cache, please build the
+			 * configuration with the available token. getting Authentication Token call is
+			 * not needed.
+			 */
+			AccessTokenResponse accessTokenResponse = getAuthenticationToken(targetedOffersClient);
+
+			if (null != accessTokenResponse && StringUtils.isNotEmpty(accessTokenResponse.getAccessToken())) {
+				targetedOffersClient.setAccessToken(accessTokenResponse.getAccessToken());
+
+				System.out.println("AccessToken: " + accessTokenResponse.getAccessToken());
+
+				RequestHeader requestHeader = objectMapper.readValue(Thread.currentThread()
+								.getContextClassLoader().getResourceAsStream(headerJson),
+						RequestHeader.class);
+
+				TargetedOffersRequest targetedOffersRequest = objectMapper.readValue(Thread.currentThread()
+								.getContextClassLoader().getResourceAsStream(requestJson),
+						TargetedOffersRequest.class);
+				offersResponse = offersService.getOffers(targetedOffersRequest, requestHeader);
+
+				System.out.println("Offer: " + offersResponse.toString());
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return offersResponse;
+	}
+
+	/**
+	 * Helper method for acknowledging offers
+	 *
+	 * @param offersResponse
+	 * @return  boolean
+	 */
+	private boolean acknowledgeOffers(OffersResponse offersResponse) {
+		boolean isOfferAcknowledged = false;
+		try {
+			RequestHeader requestHeader = objectMapper.readValue(Thread.currentThread()
+							.getContextClassLoader().getResourceAsStream("acknowledgementRequestHeader.json"),
+					RequestHeader.class);
+			AcknowledgementRequest acknowledgementRequest = new AcknowledgementRequest();
+			acknowledgementRequest
+					.setApplicantRequestTrackingId(offersResponse.getApplicantRequestTrackingId());
+			isOfferAcknowledged = offersService.acknowledgeOffers(acknowledgementRequest, requestHeader);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return isOfferAcknowledged;
+	}
+
+	/**
+	 * Initializes the HTTP Client instance
 	 *
 	 * @throws IOException
 	 */
@@ -189,13 +261,15 @@ public class TargetedOffersSample {
 						.build());
 
 		targetedOffersClient = TargetedOffersClient.Builder
-				.build(new Config.Builder(sampleConfig.get(OAUTH_OFFERS_API_ENDPOINT), sampleConfig.get(OAUTH_API_KEY),
-						sampleConfig.get(OAUTH_API_SECRET), null, socketFactory)
-								.setJweConfig(new JWEConfig(false))
-								.setProxyConfig(new ProxyConfig(Boolean.parseBoolean(sampleConfig.get(PROXY_ENABLED)),
-										sampleConfig.get(PROXY_PROTOCOL), sampleConfig.get(PROXY_HOST),
-										Integer.valueOf(sampleConfig.get(PROXY_PORT))))
-								.build());
+				.build(Config.builder().url(sampleConfig.get(OAUTH_OFFERS_API_ENDPOINT))
+						.apiKey(sampleConfig.get(OAUTH_API_KEY))
+						.apiSecret(sampleConfig.get(OAUTH_API_SECRET))
+						.accessToken(null)
+						.socketFactory(socketFactory)
+						.jweConfig(new JWEConfig(false))
+						.proxyConfig(new ProxyConfig(Boolean.parseBoolean(sampleConfig.get(PROXY_ENABLED)),
+								sampleConfig.get(PROXY_PROTOCOL), sampleConfig.get(PROXY_HOST),
+								Integer.valueOf(sampleConfig.get(PROXY_PORT)))).build());
 
 		return targetedOffersClient;
 	}

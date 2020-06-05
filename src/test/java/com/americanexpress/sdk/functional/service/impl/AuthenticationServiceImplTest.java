@@ -15,14 +15,13 @@ package com.americanexpress.sdk.functional.service.impl;
 
 import static org.junit.Assert.assertNotNull;
 
-import java.io.IOException;
-
+import com.americanexpress.sdk.configuration.Config;
+import com.americanexpress.sdk.exception.OffersRequestValidationError;
+import com.americanexpress.sdk.service.impl.AuthenticationServiceImpl;
 import org.apache.http.HttpEntity;
 import org.easymock.classextension.EasyMock;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.powermock.api.easymock.PowerMock;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
@@ -40,34 +39,31 @@ import com.fasterxml.jackson.core.type.TypeReference;
 
 public class AuthenticationServiceImplTest {
 
-	public AuthenticationService authenticationService;
-	public TargetedOffersClient targetedOffersClient;
-	public HttpClient authClient;
-	public AccessTokenResponse accessTokenResponse;
+	HttpClient authClient;
+	Config config;
+	AuthenticationService authenticationService;
 
-	@Before
-	public void setUp() throws Exception {
-		authenticationService = EasyMock.createNiceMock(AuthenticationService.class);
-		targetedOffersClient = EasyMock.createNiceMock(TargetedOffersClient.class);
-		authClient = EasyMock.createNiceMock(HttpClient.class);
-	}
-
-	@SuppressWarnings("unchecked")
 	@Test
-	public void testGetAccessToken() throws OffersException, IOException {
-		accessTokenResponse = PowerMock.createMock(AccessTokenResponse.class);
-		PowerMock.mockStatic(ApiClientFactory.class);
-		EasyMock.expect(ApiClientFactory.createHttpClient(EasyMock.anyObject())).andReturn(authClient);
-		PowerMock.replay(ApiClientFactory.class);
-
-		EasyMock.expect(targetedOffersClient.getAuthenticationService()).andReturn(authenticationService);
-		EasyMock.replay(targetedOffersClient);
+	public void testGetAccessToken() throws OffersException{
+		authClient = EasyMock.createNiceMock(HttpClient.class);
+		config = Config.builder().apiKey("apiKey").apiSecret("apiSecret")
+				.url("https://example.americanexpress.com").build();
+		authenticationService = new AuthenticationServiceImpl(config, authClient);
+		AccessTokenResponse accessTokenResponse = new AccessTokenResponse();
 
 		EasyMock.expect(authClient.postClientResource(EasyMock.isA(HttpEntity.class), EasyMock.isA(String.class),
 				EasyMock.anyObject(), (TypeReference<Object>) EasyMock.isA(Object.class), EasyMock.anyObject()))
 				.andReturn(accessTokenResponse);
 		EasyMock.replay(authClient);
+		AccessTokenResponse response = authenticationService.getAccessToken();
+		assertNotNull(response);
+	}
 
-		assertNotNull(accessTokenResponse);
+	@Test (expected = OffersRequestValidationError.class)
+	public void testGetAccessToken_InvalidConfig() throws OffersException{
+		authClient = EasyMock.createNiceMock(HttpClient.class);
+		config = Config.builder().build();
+		authenticationService= new AuthenticationServiceImpl(config, authClient);
+		authenticationService.getAccessToken();
 	}
 }
