@@ -111,7 +111,7 @@ Sample Response :
   status: 'approved',
   expires_in: '3599', // token expiry in seconds, you can cache the token for the amount of time specified.
   token_type: 'BearerToken',
-  access_token: 'wJeW9CPT0DbrqBjrTN1xbMQZkae2'
+  access_token: 'access token example'
 }
 ```
 Note : you can skip this call if you have an active Token in your cache. if you have an active token, you can just set the bearerToken in config under authentication or call `setAccessToken('access_token')` method to update the config.
@@ -225,7 +225,7 @@ oauth.keystore.passphrase.property=password_example // Keystore password
 oauth.keystore.alias.property=alias_example         // Alias (or name) under which the key is stored in the keystore
 oauth.offers.api.endpoint=https://example.aexp.com  // TargetedOffersAPI SDK endpoint
 oauth.api.key=auth_key_example                      // OAuth Client ID/Key
-oauth.api.secret=auth_key_secret_example            // OAuth Secret 
+oauth.api.secret=secret_example                     // OAuth Secret 
 proxy.protocol=http                                 // Protocol Client uses to connect to proxy/load balancer
 proxy.enabled=true                                  // Enabled or disabled proxy
 proxy.host=proxy.example.com                        // Proxy host
