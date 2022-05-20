@@ -35,7 +35,7 @@
 		<laas_java_client.version>4.1.1</laas_java_client.version>
 		<easymock.version>3.1</easymock.version>
 		<easymockclassextension.version>2.5.2</easymockclassextension.version>
-		<org.google.code.version>2.8.6</org.google.code.version>
+		<org.google.code.version>2.8.9</org.google.code.version>
 		<org.mockito.version>1.9.5</org.mockito.version>
 	</properties>
 	<dependencies>
