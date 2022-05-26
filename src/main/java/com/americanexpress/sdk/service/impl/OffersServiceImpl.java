@@ -31,6 +31,7 @@ import java.util.TimeZone;
 
 import javax.ws.rs.core.MultivaluedMap;
 
+import com.americanexpress.sdk.exception.*;
 import com.americanexpress.sdk.models.entities.RequestHeader;
 import com.americanexpress.sdk.models.targeted_offers.AcknowledgementRequest;
 import com.americanexpress.sdk.models.targeted_offers.OffersResponse;
@@ -42,11 +43,6 @@ import org.apache.http.entity.StringEntity;
 import com.americanexpress.sdk.client.core.utils.OfferUtil;
 import com.americanexpress.sdk.client.http.HttpClient;
 import com.americanexpress.sdk.configuration.Config;
-import com.americanexpress.sdk.exception.NoOfferFoundError;
-import com.americanexpress.sdk.exception.OffersException;
-import com.americanexpress.sdk.exception.OffersRequestValidationError;
-import com.americanexpress.sdk.exception.PayloadEncryptionError;
-import com.americanexpress.sdk.exception.ResourceNotFoundError;
 import com.americanexpress.sdk.service.OffersService;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -109,7 +105,9 @@ public class OffersServiceImpl implements OffersService {
 					}, responseHeaders);
 		} catch (ResourceNotFoundError ex) {
 			throw new NoOfferFoundError();
-		} catch (OffersException ex) {
+		} catch(OffersAPIException ex) {
+			throw ex;
+		}catch (OffersException ex) {
 			throw ex;
 		} catch (Exception ex) {
 			throw new OffersException(INTERNAL_SDK_EXCEPTION, ex);
