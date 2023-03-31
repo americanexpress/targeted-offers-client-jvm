@@ -27,7 +27,7 @@
 	</scm>
 	<properties>
 		<swagger-annotations.version>1.5.13</swagger-annotations.version>
-		<com.fasterxml.jackson.core.version>2.13.4.1</com.fasterxml.jackson.core.version>
+		<com.fasterxml.jackson.core.version>2.13.4.2</com.fasterxml.jackson.core.version>
 		<jersey-client.version>2.25.1</jersey-client.version>
 		<jersey-hk2.version>2.26</jersey-hk2.version>
 		<org.powermock.version>1.7.1</org.powermock.version>
